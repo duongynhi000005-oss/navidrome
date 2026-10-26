@@ -907,6 +907,18 @@ var _ = Describe("Items", func() {
 				Expect(got).To(Equal([]string{"Audio", "MusicAlbum", "Audio", "MusicAlbum"}))
 			})
 
+			It("accepts repeated includeItemTypes query parameters (Jellify / @jellyfin/sdk)", func() {
+				w := httptest.NewRecorder()
+				r := httptest.NewRequest("GET", "/Items?includeItemTypes=Audio&includeItemTypes=MusicAlbum&recursive=true&limit=4", nil).WithContext(ctxUser())
+				invoke(api.getItems, w, r)
+				var res dto.QueryResult
+				Expect(json.Unmarshal(w.Body.Bytes(), &res)).To(Succeed())
+				Expect(res.Items).To(HaveLen(4))
+				Expect(res.TotalRecordCount).To(Equal(4))
+				got := []string{res.Items[0].Type, res.Items[1].Type, res.Items[2].Type, res.Items[3].Type}
+				Expect(got).To(Equal([]string{"Audio", "MusicAlbum", "Audio", "MusicAlbum"}))
+			})
+
 			It("honors Limit across the merged set", func() {
 				w := httptest.NewRecorder()
 				r := httptest.NewRequest("GET", "/Items?IncludeItemTypes=Audio,MusicAlbum&Recursive=true&Limit=1", nil).WithContext(ctxUser())

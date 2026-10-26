@@ -31,6 +31,13 @@ func searchTerm(p *req.Values) string {
 	return strings.TrimSpace(p.StringOr("searchterm", ""))
 }
 
+// joinedStrings reads an array query parameter that clients may send either comma-separated
+// (Finamp: IncludeItemTypes=Audio,MusicAlbum) or as repeated keys (@jellyfin/sdk / Jellify:
+// includeItemTypes=Audio&includeItemTypes=MusicAlbum), joining all occurrences with commas.
+func joinedStrings(p *req.Values, key string) string {
+	return strings.Join(p.Strings(key), ",")
+}
+
 // itemFilters is the parsed Filters=... list together with the standalone isFavorite/isPlayed params
 // clients may send instead. A nil field means the client asked for no filtering on that dimension.
 type itemFilters struct {
@@ -42,7 +49,7 @@ type itemFilters struct {
 // Jellyfin. Tokens with no Navidrome equivalent (Likes, IsFolder, IsResumable) are dropped.
 func parseItemFilters(p *req.Values) itemFilters {
 	f := itemFilters{favorite: p.BoolPtr("isfavorite"), played: p.BoolPtr("isplayed")}
-	for token := range strings.SplitSeq(p.StringOr("filters", ""), ",") {
+	for token := range strings.SplitSeq(joinedStrings(p, "filters"), ",") {
 		switch strings.TrimSpace(token) {
 		case "IsFavorite", "IsFavoriteOrLikes":
 			f.favorite = new(true)
@@ -309,8 +316,8 @@ func listParams(p *req.Values) itemsQuery {
 	return itemsQuery{
 		fields:    dto.ParseFields(p.Strings("fields")...),
 		search:    searchTerm(p),
-		sortBy:    p.StringOr("sortby", ""),
-		sortOrder: p.StringOr("sortorder", ""),
+		sortBy:    joinedStrings(p, "sortby"),
+		sortOrder: joinedStrings(p, "sortorder"),
 		offset:    p.IntOr("startindex", 0),
 		limit:     p.IntOr("limit", 0),
 		filters:   parseItemFilters(p),
@@ -349,7 +356,7 @@ func (api *Router) parseItemsQuery(ctx context.Context, r *http.Request) (itemsQ
 	}
 	q := listParams(p)
 	q.ids = ids
-	q.rawTypes = knownItemKinds(p.StringOr("includeitemtypes", ""))
+	q.rawTypes = knownItemKinds(joinedStrings(p, "includeitemtypes"))
 	q.parentId = parentId
 	q.genreIds = genreIds
 	q.albumIds = albumIds
@@ -357,8 +364,8 @@ func (api *Router) parseItemsQuery(ctx context.Context, r *http.Request) (itemsQ
 	q.studioIds = studioIds
 	// An artist's page filters by artist, not ParentId: Finamp sends ParentId=<libraryId> for scoping
 	// plus AlbumArtistIds/ArtistIds/contributingArtistIds for the artist.
-	albumArtistScope := firstNonEmpty(p.StringOr("albumartistids", ""), p.StringOr("artistids", ""))
-	contributingScope := p.StringOr("contributingartistids", "")
+	albumArtistScope := firstNonEmpty(joinedStrings(p, "albumartistids"), joinedStrings(p, "artistids"))
+	contributingScope := joinedStrings(p, "contributingartistids")
 	artistId, ok := firstDecodedID(firstNonEmpty(albumArtistScope, contributingScope))
 	if !ok {
 		return itemsQuery{}, model.ErrNotFound
