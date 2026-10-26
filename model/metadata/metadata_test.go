@@ -49,6 +49,7 @@ var _ = Describe("Metadata", func() {
 					"----:com.apple.iTunes:CATALOGNUMBER": {"1234"},
 					"tbpm":                                {"120.6"},
 					"WM/IsCompilation":                    {"1"},
+					"initialkey":                          {"Ebm"},
 				}
 				md = metadata.New(filePath, props)
 
@@ -65,8 +66,10 @@ var _ = Describe("Metadata", func() {
 				Expect(md.Int(model.TagCatalogNumber)).To(Equal(int64(1234)))
 				Expect(md.Float(model.TagBPM)).To(Equal(120.6))
 				Expect(md.Bool(model.TagCompilation)).To(BeTrue())
+				Expect(md.String(model.TagKey)).To(Equal("Ebm"))
 				Expect(md.All()).To(SatisfyAll(
-					HaveLen(4),
+					HaveLen(5),
+					HaveKeyWithValue(model.TagKey, []string{"Ebm"}),
 					HaveKeyWithValue(model.TagTrackArtist, []string{"First Artist", "Second Artist"}),
 					HaveKeyWithValue(model.TagBPM, []string{"120.6"}),
 					HaveKeyWithValue(model.TagCompilation, []string{"1"}),

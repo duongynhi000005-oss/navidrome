@@ -206,6 +206,7 @@ const (
 	TagCatalogNumber  TagName = "catalognumber"
 	TagISRC           TagName = "isrc"
 	TagBPM            TagName = "bpm"
+	TagKey            TagName = "key"
 	TagExplicitStatus TagName = "explicitstatus"
 	TagWork           TagName = "work"
 	TagMovementName   TagName = "movementname"

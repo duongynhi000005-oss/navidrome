@@ -203,6 +203,8 @@ var _ = Describe("CanonicalTagName", func() {
 		Entry("tag name", "album", TagAlbum),
 		Entry("alias", "talb", TagAlbum),
 		Entry("mixed case alias", "TALB", TagAlbum),
+		Entry("key alias", "initialkey", TagKey),
+		Entry("key alias uppercase", "INITIALKEY", TagKey),
 		Entry("tag name that is also an alias of another tag", "musicbrainz_trackid", TagMusicBrainzTrackID),
 	)
 
